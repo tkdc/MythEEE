@@ -2,14 +2,6 @@ MythEEE
 -------
 My tiny house electronic & entertainment empire.
 
-.. image:: guilayout.png
-    :name: fig-beispiel-bild1
-    :alt:  fig-beispiel-bildx
-    :align: left
-    :width: 319px
-    :height: 808px
-    :scale: 80 %
-
 Lightweight `PyQT4`_ based universal graphical user interface to manage your household electronic
 controls as well as your sound systems in Linux.
 
@@ -39,6 +31,15 @@ Licence
 -------
 MythEEE is released under the `GNU GPL v3`_ license.
 
+Demo Image
+----------
+.. image:: guilayout.png
+    :name: fig-beispiel-bild1
+    :alt:  fig-beispiel-bildx
+    :align: left
+    :width: 319px
+    :height: 808px
+    :scale: 80 %
 
 .. _Sonos speakers: http://www.sonos.com/system/
 .. _FHEM: https://fhem.de/
