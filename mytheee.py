@@ -28,7 +28,7 @@ import psutil
 from mytheee2core import CoreIf
 
 __title__ = 'MythEEE'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __author__ = 'Thomas Katemann'
 __copyright__ = 'Copyright (C) 2018 Thomas Katemann'
 __license__ = 'GPLv3'
@@ -58,23 +58,26 @@ class GuiProps(object):
 
         # text string config
         self.gui_ts_height = [20, 40, 70, 20, 20, 30]
-        self.gui_ts_width = [80, 60, None, None, None, None]
+        self.gui_ts_width = [70, 60, 200, None, None, None]
         self.gui_ts_wrap = [False, True, True, False, False, False]
         self.gui_ts_font = [self.gui_baseFont, self.gui_baseFont, self.gui_smallFont,
                             self.gui_baseFont, self.gui_baseFont, self.gui_baseFont]
         self.gui_ts_align = [QtCore.Qt.AlignTop, QtCore.Qt.AlignTop, QtCore.Qt.AlignHCenter,
-                             QtCore.Qt.AlignHCenter, QtCore.Qt.AlignRight, QtCore.Qt.AlignBottom]
+                             QtCore.Qt.AlignHCenter, QtCore.Qt.AlignLeft, QtCore.Qt.AlignBottom]
 
         # button config
-        self.gui_pb_height = [30, 30]
-        self.gui_pb_width = [100, 80]
+        self.gui_pb_height = [30, 30, 30]
+        self.gui_pb_width = [100, 80, 60]
 
         # check box
-        self.gui_cb_width = [80, 80]
+        self.gui_cb_width = [80, 75]
+
+        # radio button
+        self.gui_rb_width = [200]
 
         # select box
-        self.gui_sb_height = [30, 30, 30]
-        self.gui_sb_width = [80, 120, None]
+        self.gui_sb_height = [30, 30, 30, 30]
+        self.gui_sb_width = [60, 120, None, 80]
 
         # text box
         self.gui_tx_height = [30, 30]
@@ -170,6 +173,7 @@ class MYthEEE(QtGui.QApplication):
         self.sGuiView.MAIN_ST_BAL[0].installEventFilter(self)
         self.sGuiView.MAIN_ST_INFO[0].installEventFilter(self)
         self.sGuiView.MAIN_ST_INFO[1].installEventFilter(self)
+        self.sGuiView.MAIN_TX_LIST.installEventFilter(self)
 
     def eventFilter(self, widget, event):
         cur_wdg_name = str(widget.windowTitle())
@@ -198,6 +202,11 @@ class MYthEEE(QtGui.QApplication):
                 self.CoreIf.gui_play_stop(0)
             if cur_wdg_name == 'MAIN_ST_INFO_1':
                 self.CoreIf.gui_play_stop(1)
+            return False
+        elif event.type() == QtCore.QEvent.KeyRelease:
+            if cur_wdg_name == 'MAIN_TX_LIST':
+                if event.matches(QtGui.QKeySequence.InsertParagraphSeparator):
+                    self.CoreIf.gui_select_track_idx()
             return False
         else:
             return False
@@ -257,16 +266,17 @@ class GuiView(QtGui.QMainWindow):
         self.MAIN_ST_TRACK[1].setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 
         # Button select player
-        self.MAIN_CB_Z = [GuiCheckBox(1, self.s_gui_props, 'LIV1', 'Check for zone grouping'),
-                          GuiCheckBox(0, self.s_gui_props, 'KIT1', 'Check for zone grouping')]
-        self.MAIN_RB_Z = [GuiRadioBut(1, self.s_gui_props, 'LIV1', 'Select coordinator zone'),
-                          GuiRadioBut(0, self.s_gui_props, 'KIT1', 'Select coordinator zone')]
+        self.MAIN_CB_Z = [GuiCheckBox(1, self.s_gui_props, 'LIV1', 'Check for zone grouping', True),
+                          GuiCheckBox(1, self.s_gui_props, 'KIT1', 'Check for zone grouping', False)]
+        self.MAIN_RB_Z = [GuiRadioBut(0, self.s_gui_props, 'LIV1', 'Select coordinator zone', True),
+                          GuiRadioBut(0, self.s_gui_props, 'KIT1', 'Select coordinator zone', False)]
 
         # frame 1 grid layout
         # addWidget (QWidget, int row, int column, int rowSpan, int columnSpan, Qt.Alignment alignment = 0)
         self.MAIN_GRID_FR01 = QtGui.QGridLayout()
         self.MAIN_GRID_FR01.setSpacing(0)
         self.MAIN_GRID_FR01.setContentsMargins = 0
+        self.MAIN_GRID_FR01.setColumnMinimumWidth(0, 70)
 
         self.MAIN_GRID_FR01.addWidget(self.MAIN_ST_TRACK[0], 1, 1, 4, 4)
         self.MAIN_GRID_FR01.addWidget(self.MAIN_ST_TRACK[1], 6, 1, 4, 4)
@@ -276,8 +286,8 @@ class GuiView(QtGui.QMainWindow):
         self.MAIN_GRID_FR01.addWidget(self.MAIN_ST_INFO[0], 3, 0)
         self.MAIN_GRID_FR01.addWidget(self.MAIN_CB_Z[0], 0, 0)
         self.MAIN_GRID_FR01.addWidget(self.MAIN_CB_Z[1], 5, 0)
-        self.MAIN_GRID_FR01.addWidget(self.MAIN_RB_Z[0], 0, 1, 1, 3)
-        self.MAIN_GRID_FR01.addWidget(self.MAIN_RB_Z[1], 5, 1, 1, 3)
+        self.MAIN_GRID_FR01.addWidget(self.MAIN_RB_Z[0], 0, 1, 1, 4)
+        self.MAIN_GRID_FR01.addWidget(self.MAIN_RB_Z[1], 5, 1, 1, 4)
         self.MAIN_GRID_FR01.addWidget(self.MAIN_ST_INFO[1], 7, 0)
 
         # FRAME 01
@@ -289,20 +299,20 @@ class GuiView(QtGui.QMainWindow):
         self.MAIN_FR_01.setLayout(fr_obj)
 
         # frame 2 elements
-        self.MAIN_SB_MDBTYP = GuiSelectBox(0, self.s_gui_props, None, 'Select play source type')
+        self.MAIN_SB_MDBTYP = GuiSelectBox(3, self.s_gui_props, None, 'Select play source type')
         self.MAIN_SB_MDBITM = GuiSelectBox(2, self.s_gui_props, None, 'Select item of play source type')
         self.MAIN_PB_NEXT = GuiButton(1, self.s_gui_props, 'NEXT', 'Click for next track')
         self.MAIN_PB_PREV = GuiButton(1, self.s_gui_props, 'PREV', 'Click for previous track')
         self.MAIN_PB_ADD_PL = GuiButton(1, self.s_gui_props, 'ADD', 'Play selected source item or add to playlist')
         self.MAIN_PB_REM_PL = GuiButton(1, self.s_gui_props, 'REM', 'Remove tracks from playlist')
-        self.MAIN_CB_SHUFFLE = GuiCheckBox(0, self.s_gui_props, 'Shuffle', 'Set shuffle or normal mode')
+        self.MAIN_CB_SHUFFLE = GuiCheckBox(0, self.s_gui_props, 'Shuffle', 'Set shuffle or normal mode',False)
         self.MAIN_ST_NUMTRCK = GuiTextString(3, self.s_gui_props, 'NumTrq', '', 'Number of tracks in playlist')
 
         self.MAIN_PB_SLEEP = GuiButton(1, self.s_gui_props, 'Sleep', 'Activate sleep timer')
         self.MAIN_TX_SLEEP = GuiTextBox(1, self.s_gui_props, '60', 'Define sleep time in minutes')
         self.MAIN_ST_SLEEP = GuiTextString(3, self.s_gui_props, 'SlpTm', '', 'Sleep timer status')
 
-        self.MAIN_TX_LIST = GuiListBox()
+        self.MAIN_TX_LIST = GuiListBox('MAIN_TX_LIST')
 
         # FRAME 2 grid layout
         # addWidget (QWidget, int row, int column, int rowSpan, int columnSpan, Qt.Alignment alignment = 0)
@@ -336,40 +346,59 @@ class GuiView(QtGui.QMainWindow):
         # frame 3 elements
         self.MAIN_ST_FHEM = GuiTextString(4, self.s_gui_props, 'FHEM')
         self.MAIN_ST_FHEM_SWT_TIT = GuiTextString(4, self.s_gui_props, '--- Switch ---')
-        self.MAIN_SB_FHEM_SWT = GuiSelectBox(1, self.s_gui_props, None, 'Select switch to control')
-        self.MAIN_PB_FHEM_SWTON = GuiButton(1, self.s_gui_props, 'ON', 'Set selected switch on')
-        self.MAIN_PB_FHEM_SWTOFF = GuiButton(1, self.s_gui_props, 'OFF', 'Set selected switch off')
+        self.MAIN_SB_FHEM_SWT = GuiSelectBox(2, self.s_gui_props, None, 'Select switch to control')
+        self.MAIN_PB_FHEM_SWTON = GuiButton(2, self.s_gui_props, 'ON', 'Set selected switch on')
+        self.MAIN_PB_FHEM_SWTOFF = GuiButton(2, self.s_gui_props, 'OFF', 'Set selected switch off')
 
         self.MAIN_SB_FHEM_TEMP = GuiSelectBox(2, self.s_gui_props, None, 'Select room thermostat to control')
         self.MAIN_SB_FHEM_TEMPD = GuiSelectBox(0, self.s_gui_props, [str(x) for x in list(range(15, 25))],
                                                'Select desired temperature')
-        self.MAIN_PB_FHEM_TEMPD = GuiButton(1, self.s_gui_props, 'SET', 'Set desired temperature')
+        self.MAIN_PB_FHEM_TEMPD = GuiButton(2, self.s_gui_props, 'SET', 'Set desired temperature')
 
         self.MAIN_ST_FHEM_R_TIT = GuiTextString(5, self.s_gui_props, '--- Temperature ---')
-        self.MAIN_ST_FHEM_R = [GuiTextString(4, self.s_gui_props, 'Liv'), GuiTextString(4, self.s_gui_props, 'Bath'),
-                               GuiTextString(4, self.s_gui_props, 'Kit'), GuiTextString(4, self.s_gui_props, 'Outdoor')]
+        self.MAIN_ST_FHEM_R = [GuiTextString(3, self.s_gui_props, 'Liv'), GuiTextString(3, self.s_gui_props, 'Bath'),
+                            GuiTextString(3, self.s_gui_props, 'Kit'), GuiTextString(3, self.s_gui_props, 'Outdoor')]
+        self.MAIN_ST_FHEM_R1 = [GuiTextString(4, self.s_gui_props, 'Liv'), GuiTextString(4, self.s_gui_props, 'Bath'),
+                            GuiTextString(4, self.s_gui_props, 'Kit'), GuiTextString(4, self.s_gui_props, 'Outdoor')]
+        self.MAIN_ST_FHEM_R2 = [GuiTextString(4, self.s_gui_props, 'Liv'), GuiTextString(4, self.s_gui_props, 'Bath'),
+                            GuiTextString(4, self.s_gui_props, 'Kit'), GuiTextString(4, self.s_gui_props, 'Outdoor')]
+        self.MAIN_ST_FHEM_R3 = [GuiTextString(4, self.s_gui_props, 'Liv'), GuiTextString(4, self.s_gui_props, 'Bath'),
+                            GuiTextString(4, self.s_gui_props, 'Kit'), GuiTextString(4, self.s_gui_props, 'Outdoor')]
         # frame 3 grid layout
         # addWidget (QWidget, int row, int column, int rowSpan, int columnSpan, Qt.Alignment alignment = 0)
         self.MAIN_GRID_FR03 = QtGui.QGridLayout()
         self.MAIN_GRID_FR03.setSpacing(2)
         self.MAIN_GRID_FR03.setContentsMargins = 0
-        self.MAIN_GRID_FR03.setColumnMinimumWidth(0, 80)
-        self.MAIN_GRID_FR03.setColumnMinimumWidth(4, 80)
-
-        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_SWT_TIT, 10, 0)
+        self.MAIN_GRID_FR03.setColumnMinimumWidth(0, 60)
+        self.MAIN_GRID_FR03.setColumnMinimumWidth(1, 40)
+        self.MAIN_GRID_FR03.setColumnMinimumWidth(2, 60)
+        self.MAIN_GRID_FR03.setColumnMinimumWidth(3, 60)
+        self.MAIN_GRID_FR03.setColumnMinimumWidth(4, 60)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_SWT_TIT, 10, 0, 1, 2)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM, 10, 4, 1, 1, QtCore.Qt.AlignRight)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_PB_FHEM_SWTON, 11, 0)
-        self.MAIN_GRID_FR03.addWidget(self.MAIN_SB_FHEM_SWT, 11, 1, 1, 3, QtCore.Qt.AlignHCenter)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_SB_FHEM_SWT, 11, 1, 1, 3)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_PB_FHEM_SWTOFF, 11, 4, QtCore.Qt.AlignRight)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R_TIT, 12, 0, 1, 5)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_SB_FHEM_TEMP, 13, 0, 1, 3)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_SB_FHEM_TEMPD, 13, 3, 1, 1, QtCore.Qt.AlignHCenter)
         self.MAIN_GRID_FR03.addWidget(self.MAIN_PB_FHEM_TEMPD, 13, 4, QtCore.Qt.AlignRight)
-        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[0], 14, 0, 1, 5)
-        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[1], 15, 0, 1, 5)
-        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[2], 16, 0, 1, 5)
-        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[3], 17, 0, 1, 5)
-
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[0], 14, 0, 1, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[1], 15, 0, 1, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[2], 16, 0, 1, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R[3], 17, 0, 1, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R1[0], 14, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R1[1], 15, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R1[2], 16, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R1[3], 17, 2)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R2[0], 14, 3)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R2[1], 15, 3)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R2[2], 16, 3)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R2[3], 17, 3)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R3[0], 14, 4)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R3[1], 15, 4)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R3[2], 16, 4)
+        self.MAIN_GRID_FR03.addWidget(self.MAIN_ST_FHEM_R3[3], 17, 4)
         # FRAME 03
         self.MAIN_FR_03.setVisible(self.s_gui_props.gui_fr_ena[2])
         self.MAIN_FR_03.setStyleSheet("QGroupBox { border: 1px solid;}")
@@ -415,7 +444,7 @@ class GuiView(QtGui.QMainWindow):
         if self.s_gui_props.gui_fr_ena[2]:
             self.menu_fr03.setChecked(1)
 
-    def set_frames(self, idx_frame, idx_state = 2):
+    def set_frames(self, idx_frame, idx_state=2):
         """
 
         :param idx_frame:
@@ -527,12 +556,12 @@ class GuiView(QtGui.QMainWindow):
 
 
 class GuiListBox(QtGui.QListWidget):
-    def __init__(self):
+    def __init__(self, str_name='abc'):
         super(GuiListBox, self).__init__()
 
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-
+        self.setWindowTitle(str_name)
         self._markline = 0
 
     @property
@@ -606,12 +635,12 @@ class GuiButton(QtGui.QPushButton):
 
 
 class GuiCheckBox(QtGui.QCheckBox):
-    def __init__(self, idx_set, s_gui_props, str_name='abc', str_stat_tip=None):
+    def __init__(self, idx_set, s_gui_props, str_name='abc', str_stat_tip=None, b_is_checked=False):
         super(GuiCheckBox, self).__init__()
         self.setFixedWidth(s_gui_props.gui_cb_width[idx_set])
         self.setText(str_name)
         self.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.setChecked(idx_set)
+        self.setChecked(b_is_checked)
         if str_stat_tip is not None:
             self.setStatusTip(str_stat_tip)
 
@@ -642,11 +671,11 @@ class GuiSelectBox(QtGui.QComboBox):
 
 
 class GuiRadioBut(QtGui.QRadioButton):
-    def __init__(self, idx_set, s_gui_props, str_name='abc', str_stat_tip=None):
+    def __init__(self, idx_set, s_gui_props, str_name='abc', str_stat_tip=None, b_is_checked=False):
         super(GuiRadioBut, self).__init__()
-
+        self.setFixedWidth(s_gui_props.gui_rb_width[idx_set])
         self.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.setChecked(idx_set)
+        self.setChecked(b_is_checked)
         if str_stat_tip is not None:
             self.setStatusTip(str_stat_tip)
         self._dispval = str_name

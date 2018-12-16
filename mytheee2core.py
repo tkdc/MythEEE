@@ -48,7 +48,7 @@ if __b_cofhemif_ena__:
         from cofhemif import CoFhemIf
 
 __title__ = 'MythEEE2core'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __author__ = 'Thomas Katemann'
 __copyright__ = 'Copyright 2018 Thomas Katemann'
 __license__ = 'GPLv3'
@@ -156,8 +156,10 @@ class CoreIf():
         :param str_val2_cur:
         :param str_val3_cur:
         """
-        str_full = str_room_cur + str_val1_cur + str_val2_cur + str_val3_cur
-        self.sGuiView.MAIN_ST_FHEM_R[idx_room].dispval = str_full
+        self.sGuiView.MAIN_ST_FHEM_R[idx_room].dispval = str_room_cur
+        self.sGuiView.MAIN_ST_FHEM_R1[idx_room].dispval = str_val1_cur
+        self.sGuiView.MAIN_ST_FHEM_R2[idx_room].dispval = str_val2_cur
+        self.sGuiView.MAIN_ST_FHEM_R3[idx_room].dispval = str_val3_cur
 
     def gui_play_stop(self, idx_zone):
         """
@@ -315,7 +317,9 @@ class CoreIf():
             self.sGuiView.MAIN_SB_MDBITM.addItems(self.cosocow.a_aux_avail_name)
         elif idx_row >= self.idx_mudb[0] and idx_row <= self.idx_mudb[1]:
             self.sGuiView.MAIN_SB_MDBITM.clear()
-            self.sGuiView.MAIN_SB_MDBITM.addItems(self.cosocow.a_mudb_items_name[idx_row - self.idx_mudb[0]])
+            idx_req = idx_row - self.idx_mudb[0]
+            if len(self.cosocow.a_mudb_items_name) is not 0:
+                self.sGuiView.MAIN_SB_MDBITM.addItems(self.cosocow.a_mudb_items_name[idx_req])
 
     def core_play_track_idx(self, idx_zone, idx_track):
         """
