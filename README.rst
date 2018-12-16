@@ -2,12 +2,20 @@ MythEEE
 -------
 My tiny house electronic & entertainment empire.
 
+.. image:: guilayout.png
+    :name: fig-beispiel-bild1
+    :alt:  fig-beispiel-bildx
+    :align: left
+    :width: 319px
+    :height: 808px
+    :scale: 80 %
+
 Lightweight `PyQT4`_ based universal graphical user interface to manage your household electronic
 controls as well as your sound systems in Linux.
 
 The demo configuration is prepared by the core interface as follows:
- - control your `Sonos speakers`_ via the `CoSoCoW`_ (`SoCo`_) library.
- - request your `FHEM`_ server via the `CoFhemIf`_ library to control your electronic components like room heating thermostat, switched socket-outlets or temperature sensors.
+ - Control your `Sonos speakers`_ via the `CoSoCoW`_ (`SoCo`_) library.
+ - Request your `FHEM`_ server via the `CoFhemIf`_ library to control your electronic components like room heating thermostat, switched socket-outlets or temperature sensors.
 
 Installation and Usage
 ----------------------
